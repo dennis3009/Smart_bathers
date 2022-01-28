@@ -1,0 +1,165 @@
+swagger: "2.0"
+info:
+  description: "This is a sample server Lightstore server.  You can find out more about     Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net, #swagger](http://swagger.io/irc/).      For this sample, you can use the api key `special-key` to test the authorization     filters."
+  version: "1.0.0"
+  title: "Swagger Lightstore"
+  termsOfService: "http://swagger.io/terms/"
+  contact:
+    email: "apiteam@swagger.io"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "petstore.swagger.io"
+basePath: "/v2"
+tags:
+- name: "light"
+  description: "Everything about your Lights"
+  
+- name: "sink"
+  description: "Access to Lightstore ordersd"
+  
+- name: "shower"
+  description: "Access to Lightstore orders"
+  
+- name: "toilet"
+  description: "Access to Lightstore ordersdd"
+schemes:
+- "https"
+- "http"
+
+paths:
+  /light/send:
+    post:
+      tags:
+      - "light"
+      summary: "Send light's data to the Python webservice"
+      description: ""
+      operationId: "sendLightData"
+      consumes:
+      - "application/x-www-form-urlencoded"
+      produces:
+      - "application/x-www-form-urlencoded"
+      parameters:
+      - in: "formData"
+        name: "LightData"
+        description: "Light's data to be sent to the Python webservice"
+        type: "string"
+        required: true
+      responses:
+        default:
+          description: "Invalid input"
+
+  /light/recieve:
+    post:
+      tags:
+      - "light"
+      summary: "Recieve confirmation of light's data from the Python webservice"
+      description: ""
+      operationId: "recieveLightData"
+      consumes:
+      - "application/x-www-form-urlencoded"
+      produces:
+      - "application/x-www-form-urlencoded"
+      parameters:
+      - in: "formData"
+        name: "LightData"
+        description: "Light's data to be sent to the Python webservice"
+        type: "string"
+        required: true
+      responses:
+        default:
+          description: "Invalid input"
+  
+  /sink/send:
+    post:
+      tags:
+      - "sink"
+      summary: "Send sink's data to the Python webservice"
+      description: ""
+      operationId: "sendSinkData"
+      consumes:
+      - "application/x-www-form-urlencoded"
+      produces:
+      - "application/x-www-form-urlencoded"
+      parameters:
+      - in: "formData"
+        name: "SinkData"
+        description: "Sink's data to be sent to the Python webservice"
+        type: "string"
+        required: true
+      responses:
+        default:
+          description: "Invalid input"
+
+  /sink/recieve:
+    post:
+      tags:
+      - "sink"
+      summary: "Recieve confirmation of sink's data from the Python webservice"
+      description: ""
+      operationId: "recieveSinkData"
+      consumes:
+      - "application/x-www-form-urlencoded"
+      produces:
+      - "application/x-www-form-urlencoded"
+      parameters:
+      - in: "formData"
+        name: "SinkData"
+        description: "Sink's data to be sent to the Python webservice"
+        type: "string"
+        required: true
+      responses:
+        default:
+          description: "Invalid input"
+        
+    
+definitions:
+  Light:
+    type: "object"
+    required:
+    - "data"
+    properties:
+      data:
+        type: "string"
+        example: "name=?;mode=?color1=?;color2=?'color3=?;brightness=?;"
+      name:
+        type: "string"
+        example: "Lumina"
+      mode:
+        type: "string"
+        example: "RGB"
+      color1:
+        type: "integer"
+        example: "255"
+      color2:
+        type: "integer"
+        example: "0"
+      color3:
+        type: "integer"
+        example: "213"
+      brightness:
+        type: "integer"
+        example: "255"
+        
+  Sink:
+    type: "string"
+    required:
+    - "data"
+    properties:
+      data:
+        type: "string"
+        example: "Lumina"
+        
+  ApiResponse:
+    type: "string"
+    properties:
+      data:
+        type: "string"
+      type:
+        type: "string"
+      message:
+        type: "string"
+        
+externalDocs:
+  description: "Find out more about Swagger"
+  url: "http://swagger.io"
