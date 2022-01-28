@@ -102,6 +102,71 @@ public class SinkView extends AppCompatActivity {
 //            }
         }
 
+//        sinkview_publish.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                //String username = cursorLight.getString(7);
+//                String name = lightview_name.getText().toString();
+//                int brightness = Integer.parseInt(lightview_brightness.getText().toString());
+//                int color1 = Integer.parseInt(lightview_color1.getText().toString());
+//                int color2 = Integer.parseInt(lightview_color2.getText().toString());
+//                int color3 = Integer.parseInt(lightview_color3.getText().toString());
+//                String mode = lightview_mode.getText().toString();
+//
+//                boolean goodName = false;
+//                boolean goodColor = false;
+//                boolean goodBrightness = false;
+//                boolean goodMode = false;
+//
+//                if ( !isValidName(name) ) {
+//                    lightview_name.setError("The name must have at least 5 characters! The first one should be uppercase!");
+//                }
+//                else {
+//                    goodName = true;
+//                }
+//
+//                if ( !isValidBrightness(brightness) ) {
+//                    lightview_brightness.setError("The brightness must be between 0 and 255!");
+//                }
+//                else {
+//                    goodBrightness = true;
+//                }
+//
+//                if ( !isValidMode(mode) ) {
+//                    lightview_mode.setError("The mode should be RGB or HSB!");
+//                }
+//                else {
+//                    goodMode = true;
+//                }
+//
+//                if ( !isValidColor(color1, color2, color3) ) {
+//                    lightview_color1.setError("The color must be between 0 and 255!");
+//                    lightview_color2.setError("The color must be between 0 and 255!");
+//                    lightview_color3.setError("The color must be between 0 and 255!");
+//                }
+//                else {
+//                    goodColor = true;
+//                }
+//
+//                if (role.equals("User")) {
+////
+//                }
+//                else if (role.equals("Admin")) {
+////
+//                }
+//
+//                if( goodName && goodBrightness && goodColor && goodMode) {
+//                    messageToSend = "name=" + name + ";";
+//                    messageToSend += "mode=" + mode + ";";
+//                    messageToSend += "brightness=" + brightness + ";";
+//                    messageToSend += "color1=" + color1 + ";";
+//                    messageToSend += "color2=" + color2 + ";";
+//                    messageToSend += "color3=" + color3 + ";";
+//
+//                    pub(v);
+//                }
+//            }
+//        });
 
         sinkview_submit.setOnClickListener(new View.OnClickListener() {
             @Override

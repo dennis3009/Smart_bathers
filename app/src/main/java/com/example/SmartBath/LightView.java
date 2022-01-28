@@ -5,21 +5,32 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.SmartBath.model.DatabaseHandler;
 
+import org.eclipse.paho.android.service.MqttAndroidClient;
+import org.eclipse.paho.client.mqttv3.IMqttActionListener;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -163,7 +174,18 @@ public class LightView extends AppCompatActivity {
     private EditText lightview_color3;
     private EditText lightview_brightness;
     private Button lightview_submit;
+    private Button lightview_publish;
     public SharedPreferences sp;
+
+    // tcp://broker.hivemq.com:1883
+    static String MQTTHOST = "tcp://broker.hivemq.com:1883";
+    static String USERNAME = "tester";
+    static String PASSWORD = "Abc12345";
+    String topicStr = "SmartBath/Light/";
+    String messageToSend = "Default";
+
+    MqttAndroidClient client;
+
 
     public static boolean isValidName(final String name) {
         Pattern pattern;
@@ -210,10 +232,48 @@ public class LightView extends AppCompatActivity {
         lightview_color3 = (EditText) findViewById(R.id.lightview_color3);
         lightview_brightness = (EditText) findViewById(R.id.lightview_brightness);
         lightview_submit = (Button) findViewById(R.id.lightview_submit);
+        lightview_publish = (Button) findViewById(R.id.lightview_publish);
+
+
 
         String hello = "Hello, " + sp.getString("username","You are not logged in");
         lightview_username.setText(hello);
         String role = sp.getString("role","");
+
+        // old host: "tcp://broker.hivemq.com:1883"
+
+        String clientId = MqttClient.generateClientId();
+        client = new MqttAndroidClient(this.getApplicationContext(), MQTTHOST,
+                        clientId);
+
+        MqttConnectOptions options = new MqttConnectOptions();
+//        options.setUserName(USERNAME);
+//        options.setPassword(PASSWORD.toCharArray());
+
+
+
+
+        try {
+            IMqttToken token = client.connect();
+//            IMqttToken token = client.connect(options);
+            token.setActionCallback(new IMqttActionListener() {
+                @Override
+                public void onSuccess(IMqttToken asyncActionToken) {
+                    // We are connected
+                    Toast.makeText(LightView.this, "connected!! :)", Toast.LENGTH_LONG).show();
+                    System.out.println("connected!! :)");
+                }
+
+                @Override
+                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                    // Something went wrong e.g. connection timeout or firewall problems
+                    Toast.makeText(LightView.this, "not connected.. :(", Toast.LENGTH_LONG).show();
+                    System.out.println("not connected.. :(");
+                }
+            });
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
 
 
         Cursor cursorLight = databaseHandler.searchUserInLights(sp.getString("username",""));
@@ -225,6 +285,73 @@ public class LightView extends AppCompatActivity {
             lightview_color2.setText(cursorLight.getString(5));
             lightview_color3.setText(cursorLight.getString(6));
         }
+
+        lightview_publish.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //String username = cursorLight.getString(7);
+                String name = lightview_name.getText().toString();
+                int brightness = Integer.parseInt(lightview_brightness.getText().toString());
+                int color1 = Integer.parseInt(lightview_color1.getText().toString());
+                int color2 = Integer.parseInt(lightview_color2.getText().toString());
+                int color3 = Integer.parseInt(lightview_color3.getText().toString());
+                String mode = lightview_mode.getText().toString();
+
+                boolean goodName = false;
+                boolean goodColor = false;
+                boolean goodBrightness = false;
+                boolean goodMode = false;
+
+                if ( !isValidName(name) ) {
+                    lightview_name.setError("The name must have at least 5 characters! The first one should be uppercase!");
+                }
+                else {
+                    goodName = true;
+                }
+
+                if ( !isValidBrightness(brightness) ) {
+                    lightview_brightness.setError("The brightness must be between 0 and 255!");
+                }
+                else {
+                    goodBrightness = true;
+                }
+
+                if ( !isValidMode(mode) ) {
+                    lightview_mode.setError("The mode should be RGB or HSB!");
+                }
+                else {
+                    goodMode = true;
+                }
+
+                if ( !isValidColor(color1, color2, color3) ) {
+                    lightview_color1.setError("The color must be between 0 and 255!");
+                    lightview_color2.setError("The color must be between 0 and 255!");
+                    lightview_color3.setError("The color must be between 0 and 255!");
+                }
+                else {
+                    goodColor = true;
+                }
+
+                if (role.equals("User")) {
+//
+                }
+                else if (role.equals("Admin")) {
+//
+                }
+
+                if( goodName && goodBrightness && goodColor && goodMode) {
+                    messageToSend = "name=" + name + ";";
+                    messageToSend += "mode=" + mode + ";";
+                    messageToSend += "brightness=" + brightness + ";";
+                    messageToSend += "color1=" + color1 + ";";
+                    messageToSend += "color2=" + color2 + ";";
+                    messageToSend += "color3=" + color3 + ";";
+
+                    pub(v);
+                }
+            }
+        });
+
 
         lightview_submit.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -387,5 +514,15 @@ public class LightView extends AppCompatActivity {
         NAT.execute().get();
         String info = NAT.getInfo();
         return info;
+    }
+
+    public void pub(View v) {
+        String topic = topicStr;
+        String message = messageToSend;
+        try {
+            client.publish(topic, message.getBytes(), 0, false);
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
     }
 }
