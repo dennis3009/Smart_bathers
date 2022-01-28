@@ -20,7 +20,9 @@ import com.example.SmartBath.model.DatabaseHandler;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -175,14 +177,21 @@ public class LightView extends AppCompatActivity {
     private EditText lightview_brightness;
     private Button lightview_submit;
     private Button lightview_publish;
+    private Button lightview_connect;
+    private Button lightview_disconnect;
+    private TextView response;
+
     public SharedPreferences sp;
 
     // tcp://broker.hivemq.com:1883
     static String MQTTHOST = "tcp://broker.hivemq.com:1883";
     static String USERNAME = "tester";
     static String PASSWORD = "Abc12345";
-    String topicStr = "SmartBath/Light/";
+    String topicStr = "SmartBath/Light/out/";
+    String topicResp = "SmartBath/Light/in/";
     String messageToSend = "Default";
+
+    boolean connected = false;
 
     MqttAndroidClient client;
 
@@ -233,6 +242,8 @@ public class LightView extends AppCompatActivity {
         lightview_brightness = (EditText) findViewById(R.id.lightview_brightness);
         lightview_submit = (Button) findViewById(R.id.lightview_submit);
         lightview_publish = (Button) findViewById(R.id.lightview_publish);
+        lightview_connect = (Button) findViewById(R.id.lightview_connect);
+        lightview_disconnect = (Button) findViewById(R.id.lightview_disconnect);
 
 
 
@@ -241,40 +252,6 @@ public class LightView extends AppCompatActivity {
         String role = sp.getString("role","");
 
         // old host: "tcp://broker.hivemq.com:1883"
-
-        String clientId = MqttClient.generateClientId();
-        client = new MqttAndroidClient(this.getApplicationContext(), MQTTHOST,
-                        clientId);
-
-        MqttConnectOptions options = new MqttConnectOptions();
-//        options.setUserName(USERNAME);
-//        options.setPassword(PASSWORD.toCharArray());
-
-
-
-
-        try {
-            IMqttToken token = client.connect();
-//            IMqttToken token = client.connect(options);
-            token.setActionCallback(new IMqttActionListener() {
-                @Override
-                public void onSuccess(IMqttToken asyncActionToken) {
-                    // We are connected
-                    Toast.makeText(LightView.this, "connected!! :)", Toast.LENGTH_LONG).show();
-                    System.out.println("connected!! :)");
-                }
-
-                @Override
-                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                    // Something went wrong e.g. connection timeout or firewall problems
-                    Toast.makeText(LightView.this, "not connected.. :(", Toast.LENGTH_LONG).show();
-                    System.out.println("not connected.. :(");
-                }
-            });
-        } catch (MqttException e) {
-            e.printStackTrace();
-        }
-
 
         Cursor cursorLight = databaseHandler.searchUserInLights(sp.getString("username",""));
         while (cursorLight.moveToNext()) {
@@ -447,6 +424,20 @@ public class LightView extends AppCompatActivity {
                 }
             }
         });
+
+        lightview_connect.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                conn(v);
+            }
+        });
+
+        lightview_disconnect.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                disconn(v);
+            }
+        });
     }
 
     @Override
@@ -517,10 +508,99 @@ public class LightView extends AppCompatActivity {
     }
 
     public void pub(View v) {
-        String topic = topicStr;
-        String message = messageToSend;
+        if(connected) {
+            String topic = topicStr;
+            String message = messageToSend;
+            try {
+                client.publish(topic, message.getBytes(), 0, false);
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void conn(View v) {
+        String clientId = MqttClient.generateClientId();
+        client = new MqttAndroidClient(this.getApplicationContext(), MQTTHOST,
+                clientId);
+
+        MqttConnectOptions options = new MqttConnectOptions();
+//        options.setUserName(USERNAME);
+//        options.setPassword(PASSWORD.toCharArray());
+
+        response = (TextView) findViewById(R.id.lightview_response);
+
         try {
-            client.publish(topic, message.getBytes(), 0, false);
+            IMqttToken token = client.connect();
+//            IMqttToken token = client.connect(options);
+            token.setActionCallback(new IMqttActionListener() {
+                @Override
+                public void onSuccess(IMqttToken asyncActionToken) {
+                    // We are connected
+                    Toast.makeText(LightView.this, "connected!! :)", Toast.LENGTH_LONG).show();
+                    System.out.println("connected!! :)");
+                    setSubscription();
+                    connected = true;
+                }
+
+                @Override
+                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                    // Something went wrong e.g. connection timeout or firewall problems
+                    Toast.makeText(LightView.this, "not connected.. :(", Toast.LENGTH_LONG).show();
+                    System.out.println("not connected.. :(");
+                }
+            });
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+
+        client.setCallback(new MqttCallback() {
+            @Override
+            public void connectionLost(Throwable cause) {
+
+            }
+
+            @Override
+            public void messageArrived(String topic, MqttMessage message) throws Exception {
+                System.out.println("Mesaj primit!! :)");
+                response.setText(new String(message.getPayload()));
+            }
+
+            @Override
+            public void deliveryComplete(IMqttDeliveryToken token) {
+
+            }
+        });
+    }
+
+    public void disconn(View v) {
+        try {
+            IMqttToken token = client.disconnect();
+//            IMqttToken token = client.connect(options);
+            token.setActionCallback(new IMqttActionListener() {
+                @Override
+                public void onSuccess(IMqttToken asyncActionToken) {
+                    // We are connected
+                    Toast.makeText(LightView.this, "disconnected!! :)", Toast.LENGTH_LONG).show();
+                    System.out.println("disconnected!! :)");
+                    connected = false;
+                }
+
+                @Override
+                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                    // Something went wrong e.g. connection timeout or firewall problems
+                    Toast.makeText(LightView.this, "not disconnected.. :(", Toast.LENGTH_LONG).show();
+                    System.out.println("not disconnected.. :(");
+                }
+            });
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void setSubscription() {
+        try {
+            client.subscribe(topicResp, 0);
         } catch (MqttException e) {
             e.printStackTrace();
         }
