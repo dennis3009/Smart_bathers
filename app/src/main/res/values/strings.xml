@@ -1,0 +1,86 @@
+<resources>
+    <string name="app_name">Smart Bath</string>
+    <string name="action_settings">Settings</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+
+    <string name="hello_first_fragment">Hello first fragment</string>
+    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+    <string name="register_submit">Register</string>
+    <string name="register_username">Username</string>
+    <string name="register_password">Password</string>
+    <string name="login_password">login_password</string>
+    <string name="login_submit">login_submit</string>
+    <string name="login_username">login_username</string>
+    <string name="password">Password</string>
+    <string name="username">Username</string>
+    <string name="logout">Logout</string>
+    <string name="login">Login</string>
+    <string name="register">Register</string>
+    <string name="profileview">My Profile</string>
+    <string name="lightview">My Light</string>
+    <string name="textview">TextView</string>
+    <string name="name">Name</string>
+    <string name="surname">Surname</string>
+    <string name="address">Address</string>
+    <string name="age">Age</string>
+    <string name="phoneNo">Phone Number</string>
+    <string name="condition">Condition</string>
+    <string name="specialization">Specialization</string>
+    <string name="profileview_submit">Save Changes</string>
+    <string name="title_activity_appointments">AppointmentsActivity</string>
+    <string name="tab_text_1">Make an Appointment</string>
+    <string name="tab_text_2">Upcoming Appointments</string>
+    <string name="tab_text_3">Old Appointments</string>
+    <string name="action_appointments">Appointments</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="submit">Submit</string>
+    <string name="action_doctors">Doctors</string>
+    <string name="title_activity_doctor">Doctor Activity</string>
+    <string name="title_activity_settings">SettingsActivity</string>
+
+    <!-- Preference Titles -->
+    <string name="messages_header">Messages</string>
+    <string name="sync_header">Sync</string>
+
+    <!-- Messages Preferences -->
+    <string name="signature_title">Your signature</string>
+    <string name="reply_title">Default reply action</string>
+
+    <!-- Sync Preferences -->
+    <string name="sync_title">Sync email periodically</string>
+    <string name="attachment_title">Download incoming attachments</string>
+    <string name="attachment_summary_on">Automatically download attachments for incoming emails
+    </string>
+    <string name="attachment_summary_off">Only download attachments when manually requested</string>
+    <string name="contact_info">
+        Contact and information:\n\n
+        Customer support Tel: +40 764 226 342\n
+        Email: support.SmartBath@gmail.com\n
+        \n
+
+        Developers: \n
+            Burța Mihai-Cătălin - burtigus@gmail.com\n
+            Răzvan - rzvboss@gmail.com\n
+            Andronie Iustinian - iustinian.andronie@gmail.com\n
+            Denis - dnsboss@gmail.com\n
+        \n
+        Customer support open 24/7.\n
+        Application created using Android Studio 4.1\n
+        Programming language: Java\n
+        Version: 1.0\n
+
+    </string>
+    <string name="brightness">Brightness</string>
+    <string name="lightMode">Mode</string>
+    <string name="color3">color3</string>
+    <string name="color2">color2</string>
+    <string name="color1">color1</string>
+    <string name="lightview_submit">Save changes</string>
+    <string name="save">Save changes</string>
+    <string name="showerview">MyShower</string>
+
+</resources>
