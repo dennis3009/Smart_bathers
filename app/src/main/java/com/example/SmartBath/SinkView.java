@@ -47,7 +47,7 @@ public class SinkView extends AppCompatActivity {
         return false;
     }
 
-    public static boolean isValidIsSoap(final Boolean isSoap) {
+    public static boolean isValidIsSoap(final String isSoap) {
         if(isSoap.equals("true") || isSoap.equals("false")) return true;
         return false;
     }
@@ -110,7 +110,7 @@ public class SinkView extends AppCompatActivity {
                 String username = sinkview_username.getText().toString();
                 String flow = sinkview_flow.getText().toString();
                 Double temperature = Double.parseDouble(sinkview_temperature.getText().toString());
-                Boolean isSoap = Boolean.parseBoolean(sinkview_isSoap.getText().toString());
+                String isSoap = sinkview_isSoap.getText().toString();
                 String soap = sinkview_soap.getText().toString();
 
                 boolean goodFlow = false;

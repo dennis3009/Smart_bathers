@@ -82,5 +82,6 @@
     <string name="lightview_submit">Save changes</string>
     <string name="save">Save changes</string>
     <string name="showerview">MyShower</string>
+    <string name="toiletview">My Toilet</string>
 
 </resources>

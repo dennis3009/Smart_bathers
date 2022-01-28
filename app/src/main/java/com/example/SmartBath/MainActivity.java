@@ -26,6 +26,7 @@ public class MainActivity extends AppCompatActivity {
     private Button mylight_button;
     private Button myshower_button;
     private Button mysink_button;
+    private Button mytoilet_button;
 
     public DatabaseHandler databaseHandler;
     public SharedPreferences sp;
@@ -87,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
         mylight_button = (Button) findViewById(R.id.lightview);
         myshower_button = (Button) findViewById(R.id.showerview);
         mysink_button = (Button) findViewById(R.id.sinkview);
+        mytoilet_button = (Button) findViewById(R.id.toiletview);
 
 
         if (sp.getBoolean("logged", false) == false) {
@@ -116,6 +118,15 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     Intent i = new Intent(MainActivity.this, SinkView.class);
+                    startActivity(i);
+                }
+            });
+
+            mytoilet_button.setVisibility(View.VISIBLE);
+            mytoilet_button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent i = new Intent(MainActivity.this, ToiletView.class);
                     startActivity(i);
                 }
             });

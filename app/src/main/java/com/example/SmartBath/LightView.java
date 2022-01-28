@@ -28,7 +28,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-class NetworkAsyncTask extends AsyncTask<Void, Void, Void> {
+class NetworkAsyncTaskLight extends AsyncTask<Void, Void, Void> {
 
     String type;
     String name;
@@ -306,7 +306,7 @@ public class LightView extends AppCompatActivity {
 //                    }
 
                     try {
-                        String result = sendPost3("light", name, mode, brightness, color1, color2, color3);
+                        String result = sendPostLight("light", name, mode, brightness, color1, color2, color3);
                         System.out.println("Result from POST: ");
                         System.out.println(result);
                     } catch (ExecutionException e) {
@@ -375,8 +375,8 @@ public class LightView extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    String sendPost3 (String type, String name, String mode, int brightness, int color1, int color2, int color3) throws ExecutionException, InterruptedException {
-        NetworkAsyncTask NAT = new NetworkAsyncTask();
+    String sendPostLight(String type, String name, String mode, int brightness, int color1, int color2, int color3) throws ExecutionException, InterruptedException {
+        NetworkAsyncTaskLight NAT = new NetworkAsyncTaskLight();
         NAT.setType(type);
         NAT.setName(name);
         NAT.setMode(mode);
