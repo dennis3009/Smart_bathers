@@ -85,7 +85,7 @@ public class SinkView extends AppCompatActivity {
     }
 
     public static boolean isValidTemperature(final Double temperature) {
-        if(temperature < 49 || -10 < temperature) return true;
+        if(temperature < 49 && -10 < temperature) return true;
         return false;
     }
 
