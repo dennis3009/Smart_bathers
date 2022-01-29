@@ -40,6 +40,9 @@ public class ShowerView extends AppCompatActivity{
     private Button showerview_publish;
     private Button showerview_connect;
     private Button showerview_disconnect;
+    private Button showerview_subscribe;
+    private Button showerview_unsubscribe;
+    private TextView status;
     private TextView response;
 
     public SharedPreferences sp;
@@ -122,6 +125,8 @@ public class ShowerView extends AppCompatActivity{
         showerview_publish = (Button) findViewById(R.id.showerview_publish);
         showerview_connect = (Button) findViewById(R.id.showerview_connect);
         showerview_disconnect = (Button) findViewById(R.id.showerview_disconnect);
+        showerview_subscribe = (Button) findViewById(R.id.showerview_subscribe);
+        showerview_unsubscribe = (Button) findViewById(R.id.showerview_unsubscribe);
 
 //        String hello = "Hello, " + sp.getString("username", "You are now logged in");
 //        textView.setText(hello);
@@ -331,6 +336,20 @@ public class ShowerView extends AppCompatActivity{
                 disconn(v);
             }
         });
+
+        showerview_subscribe.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setSubscription();
+            }
+        });
+
+        showerview_unsubscribe.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setUnsubscription();
+            }
+        });
     }
 
     @Override
@@ -387,11 +406,15 @@ public class ShowerView extends AppCompatActivity{
     }
 
     public void pub(View v) {
+
+        status = (TextView) findViewById(R.id.showerview_status);
+
         if(connected) {
             String topic = topicStr;
             String message = messageToSend;
             try {
                 client.publish(topic, message.getBytes(), 0, false);
+                status.setText(new String("Sent"));
             } catch (MqttException e) {
                 e.printStackTrace();
             }
@@ -408,6 +431,7 @@ public class ShowerView extends AppCompatActivity{
 //        options.setPassword(PASSWORD.toCharArray());
 
         response = (TextView) findViewById(R.id.showerview_response);
+        status = (TextView) findViewById(R.id.showerview_status);
 
         try {
             IMqttToken token = client.connect();
@@ -418,7 +442,7 @@ public class ShowerView extends AppCompatActivity{
                     // We are connected
                     Toast.makeText(ShowerView.this, "connected!! :)", Toast.LENGTH_LONG).show();
                     System.out.println("connected!! :)");
-                    setSubscription();
+                    status.setText(new String("Connected"));
                     connected = true;
                 }
 
@@ -427,6 +451,7 @@ public class ShowerView extends AppCompatActivity{
                     // Something went wrong e.g. connection timeout or firewall problems
                     Toast.makeText(ShowerView.this, "not connected.. :(", Toast.LENGTH_LONG).show();
                     System.out.println("not connected.. :(");
+                    status.setText(new String("Not connected"));
                 }
             });
         } catch (MqttException e) {
@@ -443,6 +468,7 @@ public class ShowerView extends AppCompatActivity{
             public void messageArrived(String topic, MqttMessage message) throws Exception {
                 System.out.println("Mesaj primit!! :)");
                 response.setText(new String(message.getPayload()));
+                status.setText(new String("Recieved"));
             }
 
             @Override
@@ -453,6 +479,9 @@ public class ShowerView extends AppCompatActivity{
     }
 
     public void disconn(View v) {
+
+        status = (TextView) findViewById(R.id.showerview_status);
+
         try {
             IMqttToken token = client.disconnect();
 //            IMqttToken token = client.connect(options);
@@ -462,6 +491,7 @@ public class ShowerView extends AppCompatActivity{
                     // We are connected
                     Toast.makeText(ShowerView.this, "disconnected!! :)", Toast.LENGTH_LONG).show();
                     System.out.println("disconnected!! :)");
+                    status.setText(new String("Disconnected"));
                     connected = false;
                 }
 
@@ -470,6 +500,7 @@ public class ShowerView extends AppCompatActivity{
                     // Something went wrong e.g. connection timeout or firewall problems
                     Toast.makeText(ShowerView.this, "not disconnected.. :(", Toast.LENGTH_LONG).show();
                     System.out.println("not disconnected.. :(");
+                    status.setText(new String("Not disconnected"));
                 }
             });
         } catch (MqttException e) {
@@ -478,8 +509,24 @@ public class ShowerView extends AppCompatActivity{
     }
 
     private void setSubscription() {
+
+        status = (TextView) findViewById(R.id.showerview_status);
+
         try {
             client.subscribe(topicResp, 0);
+            status.setText(new String("Subscribed"));
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void setUnsubscription() {
+
+        status = (TextView) findViewById(R.id.showerview_status);
+
+        try {
+            client.unsubscribe(topicResp);
+            status.setText(new String("Unsubscribed"));
         } catch (MqttException e) {
             e.printStackTrace();
         }

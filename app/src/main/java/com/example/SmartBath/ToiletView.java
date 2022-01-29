@@ -149,6 +149,9 @@ public class ToiletView extends AppCompatActivity {
     private Button toiletview_publish;
     private Button toiletview_connect;
     private Button toiletview_disconnect;
+    private Button toiletview_subscribe;
+    private Button toiletview_unsubscribe;
+    private TextView status;
     private TextView response;
 
     public SharedPreferences sp;
@@ -203,6 +206,8 @@ public class ToiletView extends AppCompatActivity {
         toiletview_publish = (Button) findViewById(R.id.toiletview_publish);
         toiletview_connect = (Button) findViewById(R.id.toiletview_connect);
         toiletview_disconnect = (Button) findViewById(R.id.toiletview_disconnect);
+        toiletview_subscribe = (Button) findViewById(R.id.toiletview_subscribe);
+        toiletview_unsubscribe = (Button) findViewById(R.id.toiletview_unsubscribe);
 
 //        String hello = "Hello, " + sp.getString("username","You are not logged in");
 //        toiletview_username.setText(hello);
@@ -350,6 +355,20 @@ public class ToiletView extends AppCompatActivity {
                 disconn(v);
             }
         });
+
+        toiletview_subscribe.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setSubscription();
+            }
+        });
+
+        toiletview_unsubscribe.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setUnsubscription();
+            }
+        });
     }
 
     @Override
@@ -417,11 +436,15 @@ public class ToiletView extends AppCompatActivity {
     }
 
     public void pub(View v) {
+
+        status = (TextView) findViewById(R.id.toiletview_status);
+
         if(connected) {
             String topic = topicStr;
             String message = messageToSend;
             try {
                 client.publish(topic, message.getBytes(), 0, false);
+                status.setText(new String("Sent"));
             } catch (MqttException e) {
                 e.printStackTrace();
             }
@@ -438,31 +461,31 @@ public class ToiletView extends AppCompatActivity {
 //        options.setPassword(PASSWORD.toCharArray());
 
         response = (TextView) findViewById(R.id.toiletview_response);
+        status = (TextView) findViewById(R.id.toiletview_status);
 
-        if(!connected) {
-            try {
-                IMqttToken token = client.connect();
+        try {
+            IMqttToken token = client.connect();
 //            IMqttToken token = client.connect(options);
-                token.setActionCallback(new IMqttActionListener() {
-                    @Override
-                    public void onSuccess(IMqttToken asyncActionToken) {
-                        // We are connected
-                        Toast.makeText(ToiletView.this, "connected!! :)", Toast.LENGTH_LONG).show();
-                        System.out.println("connected!! :)");
-                        setSubscription();
-                        connected = true;
-                    }
+            token.setActionCallback(new IMqttActionListener() {
+                @Override
+                public void onSuccess(IMqttToken asyncActionToken) {
+                    // We are connected
+                    Toast.makeText(ToiletView.this, "connected!! :)", Toast.LENGTH_LONG).show();
+                    System.out.println("connected!! :)");
+                    status.setText(new String("Connected"));
+                    connected = true;
+                }
 
-                    @Override
-                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                        // Something went wrong e.g. connection timeout or firewall problems
-                        Toast.makeText(ToiletView.this, "not connected.. :(", Toast.LENGTH_LONG).show();
-                        System.out.println("not connected.. :(");
-                    }
-                });
-            } catch (MqttException e) {
-                e.printStackTrace();
-            }
+                @Override
+                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                    // Something went wrong e.g. connection timeout or firewall problems
+                    Toast.makeText(ToiletView.this, "not connected.. :(", Toast.LENGTH_LONG).show();
+                    System.out.println("not connected.. :(");
+                    status.setText(new String("Not connected"));
+                }
+            });
+        } catch (MqttException e) {
+            e.printStackTrace();
         }
 
         client.setCallback(new MqttCallback() {
@@ -475,6 +498,7 @@ public class ToiletView extends AppCompatActivity {
             public void messageArrived(String topic, MqttMessage message) throws Exception {
                 System.out.println("Mesaj primit!! :)");
                 response.setText(new String(message.getPayload()));
+                status.setText(new String("Recieved"));
             }
 
             @Override
@@ -485,35 +509,54 @@ public class ToiletView extends AppCompatActivity {
     }
 
     public void disconn(View v) {
-        if(connected) {
-            try {
-                IMqttToken token = client.disconnect();
-//            IMqttToken token = client.connect(options);
-                token.setActionCallback(new IMqttActionListener() {
-                    @Override
-                    public void onSuccess(IMqttToken asyncActionToken) {
-                        // We are connected
-                        Toast.makeText(ToiletView.this, "disconnected!! :)", Toast.LENGTH_LONG).show();
-                        System.out.println("disconnected!! :)");
-                        connected = false;
-                    }
 
-                    @Override
-                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                        // Something went wrong e.g. connection timeout or firewall problems
-                        Toast.makeText(ToiletView.this, "not disconnected.. :(", Toast.LENGTH_LONG).show();
-                        System.out.println("not disconnected.. :(");
-                    }
-                });
-            } catch (MqttException e) {
-                e.printStackTrace();
-            }
+        status = (TextView) findViewById(R.id.toiletview_status);
+
+        try {
+            IMqttToken token = client.disconnect();
+//            IMqttToken token = client.connect(options);
+            token.setActionCallback(new IMqttActionListener() {
+                @Override
+                public void onSuccess(IMqttToken asyncActionToken) {
+                    // We are connected
+                    Toast.makeText(ToiletView.this, "disconnected!! :)", Toast.LENGTH_LONG).show();
+                    System.out.println("disconnected!! :)");
+                    status.setText(new String("Disconnected"));
+                    connected = false;
+                }
+
+                @Override
+                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                    // Something went wrong e.g. connection timeout or firewall problems
+                    Toast.makeText(ToiletView.this, "not disconnected.. :(", Toast.LENGTH_LONG).show();
+                    System.out.println("not disconnected.. :(");
+                    status.setText(new String("Not disconnected"));
+                }
+            });
+        } catch (MqttException e) {
+            e.printStackTrace();
         }
     }
 
     private void setSubscription() {
+
+        status = (TextView) findViewById(R.id.toiletview_status);
+
         try {
             client.subscribe(topicResp, 0);
+            status.setText(new String("Subscribed"));
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void setUnsubscription() {
+
+        status = (TextView) findViewById(R.id.toiletview_status);
+
+        try {
+            client.unsubscribe(topicResp);
+            status.setText(new String("Unsubscribed"));
         } catch (MqttException e) {
             e.printStackTrace();
         }
