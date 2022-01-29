@@ -18,14 +18,6 @@
             android:name="com.example.SmartBath.SettingsActivity"
             android:label="@string/title_activity_settings"
             android:parentActivityName="com.example.SmartBath.MainActivity"></activity>
-        <activity
-            android:name="com.example.SmartBath.DoctorActivity"
-            android:label="@string/title_activity_doctor"
-            android:theme="@style/Theme.MedicalClinic2.NoActionBar" />
-        <activity
-            android:name="com.example.SmartBath.AppointmentsActivity"
-            android:label="@string/title_activity_appointments"
-            android:theme="@style/Theme.MedicalClinic2.NoActionBar" />
         <activity android:name="com.example.SmartBath.Register" />
         <activity android:name="com.example.SmartBath.ProfileView" />
         <activity android:name="com.example.SmartBath.LightView" />
