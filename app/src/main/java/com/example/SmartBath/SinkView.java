@@ -41,6 +41,9 @@ public class SinkView extends AppCompatActivity {
     private Button sinkview_publish;
     private Button sinkview_connect;
     private Button sinkview_disconnect;
+    private Button sinkview_subscribe;
+    private Button sinkview_unsubscribe;
+    private TextView status;
     private TextView response;
 
     public SharedPreferences sp;
@@ -102,6 +105,8 @@ public class SinkView extends AppCompatActivity {
         sinkview_publish = (Button) findViewById(R.id.sinkview_publish);
         sinkview_connect = (Button) findViewById(R.id.sinkview_connect);
         sinkview_disconnect = (Button) findViewById(R.id.sinkview_disconnect);
+        sinkview_subscribe = (Button) findViewById(R.id.sinkview_subscribe);
+        sinkview_unsubscribe = (Button) findViewById(R.id.sinkview_unsubscribe);
 
 //        String hello = "Hello, " + sp.getString("username","You are not logged in");
 //        sinkview_username.setText(hello);
@@ -269,6 +274,20 @@ public class SinkView extends AppCompatActivity {
                 disconn(v);
             }
         });
+
+        sinkview_subscribe.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setSubscription();
+            }
+        });
+
+        sinkview_unsubscribe.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setUnsubscription();
+            }
+        });
     }
 
     @Override
@@ -328,8 +347,10 @@ public class SinkView extends AppCompatActivity {
         if(connected) {
             String topic = topicStr;
             String message = messageToSend;
+            status = (TextView) findViewById(R.id.sinkview_status);
             try {
                 client.publish(topic, message.getBytes(), 0, false);
+                status.setText(new String("Sent"));
             } catch (MqttException e) {
                 e.printStackTrace();
             }
@@ -346,6 +367,7 @@ public class SinkView extends AppCompatActivity {
 //        options.setPassword(PASSWORD.toCharArray());
 
         response = (TextView) findViewById(R.id.sinkview_response);
+        status = (TextView) findViewById(R.id.sinkview_status);
 
         try {
             IMqttToken token = client.connect();
@@ -356,7 +378,7 @@ public class SinkView extends AppCompatActivity {
                     // We are connected
                     Toast.makeText(SinkView.this, "connected!! :)", Toast.LENGTH_LONG).show();
                     System.out.println("connected!! :)");
-                    setSubscription();
+                    status.setText(new String("Connected"));
                     connected = true;
                 }
 
@@ -365,6 +387,7 @@ public class SinkView extends AppCompatActivity {
                     // Something went wrong e.g. connection timeout or firewall problems
                     Toast.makeText(SinkView.this, "not connected.. :(", Toast.LENGTH_LONG).show();
                     System.out.println("not connected.. :(");
+                    status.setText(new String("Not connected"));
                 }
             });
         } catch (MqttException e) {
@@ -381,6 +404,7 @@ public class SinkView extends AppCompatActivity {
             public void messageArrived(String topic, MqttMessage message) throws Exception {
                 System.out.println("Mesaj primit!! :)");
                 response.setText(new String(message.getPayload()));
+                status.setText(new String("Recieved"));
             }
 
             @Override
@@ -391,6 +415,9 @@ public class SinkView extends AppCompatActivity {
     }
 
     public void disconn(View v) {
+
+        status = (TextView) findViewById(R.id.sinkview_status);
+
         try {
             IMqttToken token = client.disconnect();
 //            IMqttToken token = client.connect(options);
@@ -400,6 +427,7 @@ public class SinkView extends AppCompatActivity {
                     // We are connected
                     Toast.makeText(SinkView.this, "disconnected!! :)", Toast.LENGTH_LONG).show();
                     System.out.println("disconnected!! :)");
+                    status.setText(new String("Disconnected"));
                     connected = false;
                 }
 
@@ -408,6 +436,7 @@ public class SinkView extends AppCompatActivity {
                     // Something went wrong e.g. connection timeout or firewall problems
                     Toast.makeText(SinkView.this, "not disconnected.. :(", Toast.LENGTH_LONG).show();
                     System.out.println("not disconnected.. :(");
+                    status.setText(new String("Not disconnected"));
                 }
             });
         } catch (MqttException e) {
@@ -416,8 +445,24 @@ public class SinkView extends AppCompatActivity {
     }
 
     private void setSubscription() {
+
+        status = (TextView) findViewById(R.id.sinkview_status);
+
         try {
             client.subscribe(topicResp, 0);
+            status.setText(new String("Subscribed"));
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void setUnsubscription() {
+
+        status = (TextView) findViewById(R.id.sinkview_status);
+
+        try {
+            client.unsubscribe(topicResp);
+            status.setText(new String("Unsubscribed"));
         } catch (MqttException e) {
             e.printStackTrace();
         }

@@ -111,6 +111,90 @@ paths:
       responses:
         default:
           description: "Invalid input"
+          
+  /shower/send:
+    post:
+      tags:
+      - "shower"
+      summary: "Send shower's data to the Python webservice"
+      description: ""
+      operationId: "sendShowerData"
+      consumes:
+      - "application/x-www-form-urlencoded"
+      produces:
+      - "application/x-www-form-urlencoded"
+      parameters:
+      - in: "formData"
+        name: "ShowerData"
+        description: "Shower's data to be sent to the Python webservice"
+        type: "string"
+        required: true
+      responses:
+        default:
+          description: "Invalid input"
+
+  /shower/recieve:
+    post:
+      tags:
+      - "shower"
+      summary: "Recieve confirmation of shower's data from the Python webservice"
+      description: ""
+      operationId: "recieveShowerData"
+      consumes:
+      - "application/x-www-form-urlencoded"
+      produces:
+      - "application/x-www-form-urlencoded"
+      parameters:
+      - in: "formData"
+        name: "ShowerData"
+        description: "Shower's data to be sent to the Python webservice"
+        type: "string"
+        required: true
+      responses:
+        default:
+          description: "Invalid input"
+
+  /toilet/send:
+    post:
+      tags:
+      - "toilet"
+      summary: "Send toilet's data to the Python webservice"
+      description: ""
+      operationId: "sendToiletData"
+      consumes:
+      - "application/x-www-form-urlencoded"
+      produces:
+      - "application/x-www-form-urlencoded"
+      parameters:
+      - in: "formData"
+        name: "ToiletData"
+        description: "Toilet's data to be sent to the Python webservice"
+        type: "string"
+        required: true
+      responses:
+        default:
+          description: "Invalid input"
+
+  /toilet/recieve:
+    post:
+      tags:
+      - "toilet"
+      summary: "Recieve confirmation of toilet's data from the Python webservice"
+      description: ""
+      operationId: "recieveToiletData"
+      consumes:
+      - "application/x-www-form-urlencoded"
+      produces:
+      - "application/x-www-form-urlencoded"
+      parameters:
+      - in: "formData"
+        name: "ToiletData"
+        description: "Toilet's data to be sent to the Python webservice"
+        type: "string"
+        required: true
+      responses:
+        default:
+          description: "Invalid input"
         
     
 definitions:
@@ -124,32 +208,89 @@ definitions:
         example: "name=?;mode=?color1=?;color2=?'color3=?;brightness=?;"
       name:
         type: "string"
-        example: "Lumina"
+        example: "<name>"
       mode:
         type: "string"
-        example: "RGB"
+        example: "RGB/HSB"
       color1:
         type: "integer"
-        example: "255"
+        example: "0-255"
       color2:
         type: "integer"
-        example: "0"
+        example: "0-255"
       color3:
         type: "integer"
-        example: "213"
+        example: "0-255"
       brightness:
         type: "integer"
-        example: "255"
+        example: "0-255"
         
   Sink:
-    type: "string"
+    type: "object"
     required:
     - "data"
     properties:
       data:
         type: "string"
-        example: "Lumina"
+        example: "flow=?;temperature=?isSoap=?;Soap=?;"
+      flow:
+        type: "string"
+        example: "Off/Low/Medium/High"
+      temperature:
+        type: "integer"
+        example: "-10-49"
+      isSoap:
+        type: "string"
+        example: "Yes/No"
+      soap:
+        type: "string"
+        example: "<name>"
         
+  Shower:
+    type: "object"
+    required:
+    - "data"
+    properties:
+      data:
+        type: "string"
+        example: "temperature=?;pressure=?duration=?;gelQuantity=?;shampooQuantity=?;name=?;"
+      temperature:
+        type: "integer"
+        example: "0-50"
+      pressure:
+        type: "integer"
+        example: "1-100"
+      duration:
+        type: "integer"
+        example: "1-100"
+      gelQuantity:
+        type: "integer"
+        example: "10-500"
+      shampooQuantity:
+        type: "integer"
+        example: "10-500"
+      name:
+        type: "string"
+        example: "<name>"
+  
+  Toilet:
+    type: "object"
+    required:
+    - "data"
+    properties:
+      data:
+        type: "string"
+        example: "name=?;isOccupied=?isNightLightOn=?;"
+      name:
+        type: "string"
+        example: "<name>"
+      isOccupied:
+        type: "string"
+        example: "Yes/No"
+      isNightLightOn:
+        type: "string"
+        example: "Yes/No"
+  
   ApiResponse:
     type: "string"
     properties:

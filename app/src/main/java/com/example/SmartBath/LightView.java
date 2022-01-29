@@ -179,7 +179,11 @@ public class LightView extends AppCompatActivity {
     private Button lightview_publish;
     private Button lightview_connect;
     private Button lightview_disconnect;
+    private Button lightview_subscribe;
+    private Button lightview_unsubscribe;
+    private TextView status;
     private TextView response;
+
 
     public SharedPreferences sp;
 
@@ -244,6 +248,8 @@ public class LightView extends AppCompatActivity {
         lightview_publish = (Button) findViewById(R.id.lightview_publish);
         lightview_connect = (Button) findViewById(R.id.lightview_connect);
         lightview_disconnect = (Button) findViewById(R.id.lightview_disconnect);
+        lightview_subscribe = (Button) findViewById(R.id.lightview_subscribe);
+        lightview_unsubscribe = (Button) findViewById(R.id.lightview_unsubscribe);
 
 
 
@@ -438,6 +444,20 @@ public class LightView extends AppCompatActivity {
                 disconn(v);
             }
         });
+
+        lightview_subscribe.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setSubscription();
+            }
+        });
+
+        lightview_unsubscribe.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setUnsubscription();
+            }
+        });
     }
 
     @Override
@@ -511,8 +531,10 @@ public class LightView extends AppCompatActivity {
         if(connected) {
             String topic = topicStr;
             String message = messageToSend;
+            status = (TextView) findViewById(R.id.lightview_status);
             try {
                 client.publish(topic, message.getBytes(), 0, false);
+                status.setText(new String("Sent"));
             } catch (MqttException e) {
                 e.printStackTrace();
             }
@@ -529,6 +551,7 @@ public class LightView extends AppCompatActivity {
 //        options.setPassword(PASSWORD.toCharArray());
 
         response = (TextView) findViewById(R.id.lightview_response);
+        status = (TextView) findViewById(R.id.lightview_status);
 
         try {
             IMqttToken token = client.connect();
@@ -539,7 +562,7 @@ public class LightView extends AppCompatActivity {
                     // We are connected
                     Toast.makeText(LightView.this, "connected!! :)", Toast.LENGTH_LONG).show();
                     System.out.println("connected!! :)");
-                    setSubscription();
+                    status.setText(new String("Connected"));
                     connected = true;
                 }
 
@@ -548,6 +571,7 @@ public class LightView extends AppCompatActivity {
                     // Something went wrong e.g. connection timeout or firewall problems
                     Toast.makeText(LightView.this, "not connected.. :(", Toast.LENGTH_LONG).show();
                     System.out.println("not connected.. :(");
+                    status.setText(new String("Not connected"));
                 }
             });
         } catch (MqttException e) {
@@ -564,6 +588,7 @@ public class LightView extends AppCompatActivity {
             public void messageArrived(String topic, MqttMessage message) throws Exception {
                 System.out.println("Mesaj primit!! :)");
                 response.setText(new String(message.getPayload()));
+                status.setText(new String("Recieved"));
             }
 
             @Override
@@ -574,6 +599,9 @@ public class LightView extends AppCompatActivity {
     }
 
     public void disconn(View v) {
+
+        status = (TextView) findViewById(R.id.lightview_status);
+
         try {
             IMqttToken token = client.disconnect();
 //            IMqttToken token = client.connect(options);
@@ -583,6 +611,7 @@ public class LightView extends AppCompatActivity {
                     // We are connected
                     Toast.makeText(LightView.this, "disconnected!! :)", Toast.LENGTH_LONG).show();
                     System.out.println("disconnected!! :)");
+                    status.setText(new String("Disconnected"));
                     connected = false;
                 }
 
@@ -591,6 +620,7 @@ public class LightView extends AppCompatActivity {
                     // Something went wrong e.g. connection timeout or firewall problems
                     Toast.makeText(LightView.this, "not disconnected.. :(", Toast.LENGTH_LONG).show();
                     System.out.println("not disconnected.. :(");
+                    status.setText(new String("Not disconnected"));
                 }
             });
         } catch (MqttException e) {
@@ -599,10 +629,30 @@ public class LightView extends AppCompatActivity {
     }
 
     private void setSubscription() {
+
+        status = (TextView) findViewById(R.id.lightview_status);
+
         try {
             client.subscribe(topicResp, 0);
+            status.setText(new String("Subscribed"));
         } catch (MqttException e) {
             e.printStackTrace();
         }
+    }
+
+    private void setUnsubscription() {
+
+        status = (TextView) findViewById(R.id.lightview_status);
+
+        try {
+            client.unsubscribe(topicResp);
+            status.setText(new String("Unsubscribed"));
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void nothing() {
+
     }
 }
