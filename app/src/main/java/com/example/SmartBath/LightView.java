@@ -196,6 +196,7 @@ public class LightView extends AppCompatActivity {
     String messageToSend = "Default";
 
     boolean connected = false;
+    boolean subscribed = false;
 
     MqttAndroidClient client;
 
@@ -253,9 +254,16 @@ public class LightView extends AppCompatActivity {
 
 
 
-        String hello = "Hello, " + sp.getString("username","You are not logged in");
-        lightview_username.setText(hello);
+//        String hello = "Hello, " + sp.getString("username","You are not logged in");
+//        lightview_username.setText(hello);
         String role = sp.getString("role","");
+
+        if(role.equals("Guest")) {
+            lightview_submit.setVisibility(View.INVISIBLE);
+        }
+        else {
+            lightview_submit.setVisibility(View.VISIBLE);
+        }
 
         // old host: "tcp://broker.hivemq.com:1883"
 
@@ -553,78 +561,82 @@ public class LightView extends AppCompatActivity {
         response = (TextView) findViewById(R.id.lightview_response);
         status = (TextView) findViewById(R.id.lightview_status);
 
-        try {
-            IMqttToken token = client.connect();
+        if (!connected) {
+            try {
+                IMqttToken token = client.connect();
 //            IMqttToken token = client.connect(options);
-            token.setActionCallback(new IMqttActionListener() {
+                token.setActionCallback(new IMqttActionListener() {
+                    @Override
+                    public void onSuccess(IMqttToken asyncActionToken) {
+                        // We are connected
+                        Toast.makeText(LightView.this, "connected!! :)", Toast.LENGTH_LONG).show();
+                        System.out.println("connected!! :)");
+                        status.setText(new String("Connected"));
+                        connected = true;
+                    }
+
+                    @Override
+                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                        // Something went wrong e.g. connection timeout or firewall problems
+                        Toast.makeText(LightView.this, "not connected.. :(", Toast.LENGTH_LONG).show();
+                        System.out.println("not connected.. :(");
+                        status.setText(new String("Not connected"));
+                    }
+                });
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
+
+            client.setCallback(new MqttCallback() {
                 @Override
-                public void onSuccess(IMqttToken asyncActionToken) {
-                    // We are connected
-                    Toast.makeText(LightView.this, "connected!! :)", Toast.LENGTH_LONG).show();
-                    System.out.println("connected!! :)");
-                    status.setText(new String("Connected"));
-                    connected = true;
+                public void connectionLost(Throwable cause) {
+
                 }
 
                 @Override
-                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                    // Something went wrong e.g. connection timeout or firewall problems
-                    Toast.makeText(LightView.this, "not connected.. :(", Toast.LENGTH_LONG).show();
-                    System.out.println("not connected.. :(");
-                    status.setText(new String("Not connected"));
+                public void messageArrived(String topic, MqttMessage message) throws Exception {
+                    System.out.println("Mesaj primit!! :)");
+                    response.setText(new String(message.getPayload()));
+                    status.setText(new String("Recieved"));
+                }
+
+                @Override
+                public void deliveryComplete(IMqttDeliveryToken token) {
+
                 }
             });
-        } catch (MqttException e) {
-            e.printStackTrace();
         }
-
-        client.setCallback(new MqttCallback() {
-            @Override
-            public void connectionLost(Throwable cause) {
-
-            }
-
-            @Override
-            public void messageArrived(String topic, MqttMessage message) throws Exception {
-                System.out.println("Mesaj primit!! :)");
-                response.setText(new String(message.getPayload()));
-                status.setText(new String("Recieved"));
-            }
-
-            @Override
-            public void deliveryComplete(IMqttDeliveryToken token) {
-
-            }
-        });
     }
 
     public void disconn(View v) {
 
         status = (TextView) findViewById(R.id.lightview_status);
 
-        try {
-            IMqttToken token = client.disconnect();
+        if (connected) {
+            try {
+                IMqttToken token = client.disconnect();
 //            IMqttToken token = client.connect(options);
-            token.setActionCallback(new IMqttActionListener() {
-                @Override
-                public void onSuccess(IMqttToken asyncActionToken) {
-                    // We are connected
-                    Toast.makeText(LightView.this, "disconnected!! :)", Toast.LENGTH_LONG).show();
-                    System.out.println("disconnected!! :)");
-                    status.setText(new String("Disconnected"));
-                    connected = false;
-                }
+                token.setActionCallback(new IMqttActionListener() {
+                    @Override
+                    public void onSuccess(IMqttToken asyncActionToken) {
+                        // We are connected
+                        Toast.makeText(LightView.this, "disconnected!! :)", Toast.LENGTH_LONG).show();
+                        System.out.println("disconnected!! :)");
+                        status.setText(new String("Disconnected"));
+                        connected = false;
+                    }
 
-                @Override
-                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                    // Something went wrong e.g. connection timeout or firewall problems
-                    Toast.makeText(LightView.this, "not disconnected.. :(", Toast.LENGTH_LONG).show();
-                    System.out.println("not disconnected.. :(");
-                    status.setText(new String("Not disconnected"));
-                }
-            });
-        } catch (MqttException e) {
-            e.printStackTrace();
+                    @Override
+                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                        // Something went wrong e.g. connection timeout or firewall problems
+                        Toast.makeText(LightView.this, "not disconnected.. :(", Toast.LENGTH_LONG).show();
+                        System.out.println("not disconnected.. :(");
+                        status.setText(new String("Not disconnected"));
+                    }
+                });
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -632,11 +644,13 @@ public class LightView extends AppCompatActivity {
 
         status = (TextView) findViewById(R.id.lightview_status);
 
-        try {
-            client.subscribe(topicResp, 0);
-            status.setText(new String("Subscribed"));
-        } catch (MqttException e) {
-            e.printStackTrace();
+        if (!subscribed && connected) {
+            try {
+                client.subscribe(topicResp, 0);
+                status.setText(new String("Subscribed"));
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -644,11 +658,13 @@ public class LightView extends AppCompatActivity {
 
         status = (TextView) findViewById(R.id.lightview_status);
 
-        try {
-            client.unsubscribe(topicResp);
-            status.setText(new String("Unsubscribed"));
-        } catch (MqttException e) {
-            e.printStackTrace();
+        if (subscribed && connected) {
+            try {
+                client.unsubscribe(topicResp);
+                status.setText(new String("Unsubscribed"));
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
         }
     }
 

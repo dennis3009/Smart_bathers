@@ -18,6 +18,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.Espresso.pressBack;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static androidx.test.espresso.action.ViewActions.replaceText;
@@ -29,13 +30,13 @@ import static org.hamcrest.Matchers.allOf;
 
 @LargeTest
 @RunWith(AndroidJUnit4.class)
-public class LightMQTT {
+public class ShowerMQTT {
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule = new ActivityTestRule<>(MainActivity.class);
 
     @Test
-    public void lightMQTT() {
+    public void showerMQTT() {
         ViewInteraction overflowMenuButton = onView(
                 allOf(withContentDescription("More options"),
                         childAtPosition(
@@ -64,7 +65,7 @@ public class LightMQTT {
                                         0),
                                 4),
                         isDisplayed()));
-        appCompatEditText.perform(replaceText("tester"), closeSoftKeyboard());
+        appCompatEditText.perform(replaceText("testerul"), closeSoftKeyboard());
 
         ViewInteraction appCompatEditText2 = onView(
                 allOf(withId(R.id.register_password),
@@ -86,118 +87,121 @@ public class LightMQTT {
                         isDisplayed()));
         materialButton.perform(click());
 
+        pressBack();
+
+        ViewInteraction materialButton2 = onView(
+                allOf(withId(R.id.showerview), withText("My Shower"),
+                        childAtPosition(
+                                allOf(withId(R.id.coordinatorLayout),
+                                        childAtPosition(
+                                                withId(android.R.id.content),
+                                                0)),
+                                3),
+                        isDisplayed()));
+        materialButton2.perform(click());
+
         ViewInteraction appCompatEditText3 = onView(
-                allOf(withId(R.id.lightview_name),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                2),
-                        isDisplayed()));
-        appCompatEditText3.perform(replaceText("Nume"), closeSoftKeyboard());
-
-        ViewInteraction appCompatEditText4 = onView(
-                allOf(withId(R.id.lightview_mode),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                6),
-                        isDisplayed()));
-        appCompatEditText4.perform(replaceText("RGB"), closeSoftKeyboard());
-
-        ViewInteraction appCompatEditText5 = onView(
-                allOf(withId(R.id.lightview_color1),
+                allOf(withId(R.id.waterTemperature),
                         childAtPosition(
                                 childAtPosition(
                                         withId(android.R.id.content),
                                         0),
                                 3),
                         isDisplayed()));
-        appCompatEditText5.perform(replaceText("255"), closeSoftKeyboard());
+        appCompatEditText3.perform(replaceText("30"), closeSoftKeyboard());
 
-        ViewInteraction appCompatEditText6 = onView(
-                allOf(withId(R.id.lightview_color2),
+        ViewInteraction appCompatEditText4 = onView(
+                allOf(withId(R.id.waterPressure),
                         childAtPosition(
                                 childAtPosition(
                                         withId(android.R.id.content),
                                         0),
                                 4),
                         isDisplayed()));
-        appCompatEditText6.perform(replaceText("213"), closeSoftKeyboard());
+        appCompatEditText4.perform(replaceText("15"), closeSoftKeyboard());
 
-        ViewInteraction appCompatEditText7 = onView(
-                allOf(withId(R.id.lightview_color3),
+        ViewInteraction appCompatEditText5 = onView(
+                allOf(withId(R.id.showerDuration),
                         childAtPosition(
                                 childAtPosition(
                                         withId(android.R.id.content),
                                         0),
                                 5),
                         isDisplayed()));
-        appCompatEditText7.perform(replaceText("231"), closeSoftKeyboard());
+        appCompatEditText5.perform(replaceText("45"), closeSoftKeyboard());
 
-        ViewInteraction appCompatEditText8 = onView(
-                allOf(withId(R.id.lightview_brightness),
+        ViewInteraction appCompatEditText6 = onView(
+                allOf(withId(R.id.showerGelQuantity),
+                        childAtPosition(
+                                childAtPosition(
+                                        withId(android.R.id.content),
+                                        0),
+                                6),
+                        isDisplayed()));
+        appCompatEditText6.perform(replaceText("30"), closeSoftKeyboard());
+
+        ViewInteraction appCompatEditText7 = onView(
+                allOf(withId(R.id.showerShampooQuantity),
                         childAtPosition(
                                 childAtPosition(
                                         withId(android.R.id.content),
                                         0),
                                 7),
                         isDisplayed()));
-        appCompatEditText8.perform(replaceText("123"), closeSoftKeyboard());
+        appCompatEditText7.perform(replaceText("15"), closeSoftKeyboard());
 
-        ViewInteraction materialButton2 = onView(
-                allOf(withId(R.id.lightview_connect), withText("Connect"),
+        ViewInteraction appCompatEditText8 = onView(
+                allOf(withId(R.id.name),
+                        childAtPosition(
+                                childAtPosition(
+                                        withId(android.R.id.content),
+                                        0),
+                                8),
+                        isDisplayed()));
+        appCompatEditText8.perform(replaceText("Dusul"), closeSoftKeyboard());
+
+        ViewInteraction materialButton3 = onView(
+                allOf(withId(R.id.showerview_connect), withText("Connect"),
                         childAtPosition(
                                 childAtPosition(
                                         withId(android.R.id.content),
                                         0),
                                 10),
                         isDisplayed()));
-        materialButton2.perform(click());
+        materialButton3.perform(click());
 
-        ViewInteraction materialButton3 = onView(
-                allOf(withId(R.id.lightview_subscribe), withText("Subscribe"),
+        ViewInteraction materialButton4 = onView(
+                allOf(withId(R.id.showerview_subscribe), withText("Subscribe"),
                         childAtPosition(
                                 childAtPosition(
                                         withId(android.R.id.content),
                                         0),
                                 12),
                         isDisplayed()));
-        materialButton3.perform(click());
+        materialButton4.perform(click());
 
-        ViewInteraction materialButton4 = onView(
-                allOf(withId(R.id.lightview_publish), withText("Publish"),
+        ViewInteraction materialButton5 = onView(
+                allOf(withId(R.id.showerview_publish), withText("Publish"),
                         childAtPosition(
                                 childAtPosition(
                                         withId(android.R.id.content),
                                         0),
                                 9),
                         isDisplayed()));
-        materialButton4.perform(click());
+        materialButton5.perform(click());
 
-        ViewInteraction materialButton5 = onView(
-                allOf(withId(R.id.lightview_unsubscribe), withText("Unsubscribe"),
+        ViewInteraction materialButton6 = onView(
+                allOf(withId(R.id.showerview_unsubscribe), withText("Unsubscribe"),
                         childAtPosition(
                                 childAtPosition(
                                         withId(android.R.id.content),
                                         0),
                                 13),
                         isDisplayed()));
-        materialButton5.perform(click());
-
-        ViewInteraction materialButton6 = onView(
-                allOf(withId(R.id.lightview_publish), withText("Publish"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(android.R.id.content),
-                                        0),
-                                9),
-                        isDisplayed()));
         materialButton6.perform(click());
 
         ViewInteraction materialButton7 = onView(
-                allOf(withId(R.id.lightview_disconnect), withText("Disconnect"),
+                allOf(withId(R.id.showerview_disconnect), withText("Disconnect"),
                         childAtPosition(
                                 childAtPosition(
                                         withId(android.R.id.content),

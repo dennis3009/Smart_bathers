@@ -60,14 +60,14 @@
         app:layout_constraintHorizontal_bias="0.139"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.093" />
+        app:layout_constraintVertical_bias="0.063" />
 
     <EditText
         android:id="@+id/toiletview_isOccupied"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
-        android:layout_marginBottom="356dp"
+        android:layout_marginBottom="368dp"
         android:ems="10"
         android:hint="Is it occupied?"
         android:inputType="text"
@@ -90,7 +90,7 @@
         app:layout_constraintHorizontal_bias="0.139"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.36" />
+        app:layout_constraintVertical_bias="0.334" />
 
     <Button
         android:id="@+id/toiletview_publish"
