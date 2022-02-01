@@ -12,9 +12,21 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.SmartBath.model.DatabaseHandler;
 
+import org.eclipse.paho.android.service.MqttAndroidClient;
+import org.eclipse.paho.client.mqttv3.IMqttActionListener;
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+
+import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,7 +38,28 @@ public class SinkView extends AppCompatActivity {
     private EditText sinkview_isSoap;
     private EditText sinkview_soap;
     private Button sinkview_submit;
+    private Button sinkview_publish;
+    private Button sinkview_connect;
+    private Button sinkview_disconnect;
+    private Button sinkview_subscribe;
+    private Button sinkview_unsubscribe;
+    private TextView status;
+    private TextView response;
+
     public SharedPreferences sp;
+
+    // tcp://broker.hivemq.com:1883
+    static String MQTTHOST = "tcp://broker.hivemq.com:1883";
+    static String USERNAME = "tester";
+    static String PASSWORD = "Abc12345";
+    String topicStr = "SmartBath/Sink/out/";
+    String topicResp = "SmartBath/Sink/in/";
+    String messageToSend = "Default";
+
+    boolean connected = false;
+    boolean subscribed = false;
+
+    MqttAndroidClient client;
 
     public static boolean isValidSoap(final String soap) {
         Pattern pattern;
@@ -48,12 +81,12 @@ public class SinkView extends AppCompatActivity {
     }
 
     public static boolean isValidIsSoap(final String isSoap) {
-        if(isSoap.equals("true") || isSoap.equals("false")) return true;
+        if(isSoap.equals("Yes") || isSoap.equals("No")) return true;
         return false;
     }
 
     public static boolean isValidTemperature(final Double temperature) {
-        if(temperature < 49 || -10 < temperature) return true;
+        if(temperature < 49 && -10 < temperature) return true;
         return false;
     }
 
@@ -70,38 +103,89 @@ public class SinkView extends AppCompatActivity {
         sinkview_isSoap = (EditText) findViewById(R.id.sinkview_isSoap);
         sinkview_soap = (EditText) findViewById(R.id.sinkview_soap);
         sinkview_submit = (Button) findViewById(R.id.sinkview_submit);
+        sinkview_publish = (Button) findViewById(R.id.sinkview_publish);
+        sinkview_connect = (Button) findViewById(R.id.sinkview_connect);
+        sinkview_disconnect = (Button) findViewById(R.id.sinkview_disconnect);
+        sinkview_subscribe = (Button) findViewById(R.id.sinkview_subscribe);
+        sinkview_unsubscribe = (Button) findViewById(R.id.sinkview_unsubscribe);
 
 //        String hello = "Hello, " + sp.getString("username","You are not logged in");
 //        sinkview_username.setText(hello);
         String role = sp.getString("role","");
 
-        if (role.equals("User")) {
-//            profileview_condition.setVisibility(View.VISIBLE);
-//            profileview_specialization.setVisibility(View.INVISIBLE);
-//            Cursor cursorPatient = databaseHandler.searchUserInPatients(sp.getString("username",""));
-//            while (cursorPatient.moveToNext()) {
-//                sinkview_username.setText(cursorPatient.getString(1));
-//                profileview_surname.setText(cursorPatient.getString(2));
-//                profileview_age.setText(cursorPatient.getString(3));
-//                profileview_address.setText(cursorPatient.getString(4));
-//                profileview_phoneNo.setText(cursorPatient.getString(5));
-//                profileview_condition.setText(cursorPatient.getString(6));
-//            }
+        if(role.equals("Guest")) {
+            sinkview_submit.setVisibility(View.INVISIBLE);
         }
-        else if (role.equals("Admin")) {
-//            profileview_condition.setVisibility(View.INVISIBLE);
-//            profileview_specialization.setVisibility(View.VISIBLE);
-//            Cursor cursorDoctor = databaseHandler.searchUserInDoctors(sp.getString("username",""));
-//            while (cursorDoctor.moveToNext()) {
-//                sinkview_username.setText(cursorDoctor.getString(1));
-//                profileview_surname.setText(cursorDoctor.getString(2));
-//                profileview_age.setText(cursorDoctor.getString(3));
-//                profileview_address.setText(cursorDoctor.getString(4));
-//                profileview_phoneNo.setText(cursorDoctor.getString(5));
-//                profileview_specialization.setText(cursorDoctor.getString(6));
-//            }
+        else {
+            sinkview_submit.setVisibility(View.VISIBLE);
         }
 
+        sinkview_publish.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(SinkView.this, MainActivity.class);
+                String username = sinkview_username.getText().toString();
+                String flow = sinkview_flow.getText().toString();
+                Double temperature = Double.parseDouble(sinkview_temperature.getText().toString());
+                String isSoap = sinkview_isSoap.getText().toString();
+                String soap = sinkview_soap.getText().toString();
+
+                boolean goodFlow = false;
+                boolean goodTemperature = false;
+                boolean goodIsSoap = false;
+                boolean goodSoap = false;
+
+                if (!isValidSoap(soap)) {
+                    sinkview_soap.setError("The soap name must have at least 1 character! The first one should be uppercase!");
+                } else {
+                    goodSoap = true;
+                }
+
+                if (!isValidTemperature(temperature)) {
+                    sinkview_temperature.setError("The temperature must be between -10 and 49!");
+                } else {
+                    goodTemperature = true;
+                }
+
+                if (!isValidFlow(flow)) {
+                    sinkview_flow.setError("The flow should be Off or Low or Medium or High!");
+                } else {
+                    goodFlow = true;
+                }
+
+                if (!isValidIsSoap(isSoap)) {
+                    sinkview_isSoap.setError("The Soap container must be true or false!");
+                } else {
+                    goodIsSoap = true;
+                }
+
+                if (role.equals("User")) {
+//                    if ( !isValidCondition(condition) ) {
+//                        profileview_condition.setError("The condition must have at least 5 characters!");
+//                    }
+//                    else {
+//                        goodCondition = true;
+//                    }
+                }
+                else if (role.equals("Admin")) {
+//                    if ( !isValidSpecialization(specialization) ) {
+//                        profileview_specialization.setError("The specialization must have at least 5 characters!");
+//                    }
+//                    else {
+//                        goodSpecialization = true;
+//                    }
+                }
+
+                if( goodFlow && goodSoap && goodIsSoap && goodTemperature) {
+                    messageToSend = "flow=" + flow + ";";
+                    messageToSend += "soap=" + soap + ";";
+                    messageToSend += "isSoap=" + isSoap + ";";
+                    messageToSend += "temperature=" + temperature + ";";
+
+                    pub(v);
+                }
+            }
+        });
 
         sinkview_submit.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -177,6 +261,34 @@ public class SinkView extends AppCompatActivity {
                 }
             }
         });
+
+        sinkview_connect.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                conn(v);
+            }
+        });
+
+        sinkview_disconnect.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                disconn(v);
+            }
+        });
+
+        sinkview_subscribe.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setSubscription();
+            }
+        });
+
+        sinkview_unsubscribe.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setUnsubscription();
+            }
+        });
     }
 
     @Override
@@ -230,5 +342,138 @@ public class SinkView extends AppCompatActivity {
 
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void pub(View v) {
+        if(connected) {
+            String topic = topicStr;
+            String message = messageToSend;
+            status = (TextView) findViewById(R.id.sinkview_status);
+            try {
+                client.publish(topic, message.getBytes(), 0, false);
+                status.setText(new String("Sent"));
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void conn(View v) {
+        String clientId = MqttClient.generateClientId();
+        client = new MqttAndroidClient(this.getApplicationContext(), MQTTHOST,
+                clientId);
+
+        MqttConnectOptions options = new MqttConnectOptions();
+//        options.setUserName(USERNAME);
+//        options.setPassword(PASSWORD.toCharArray());
+
+        response = (TextView) findViewById(R.id.sinkview_response);
+        status = (TextView) findViewById(R.id.sinkview_status);
+
+        if (!connected) {
+            try {
+                IMqttToken token = client.connect();
+//            IMqttToken token = client.connect(options);
+                token.setActionCallback(new IMqttActionListener() {
+                    @Override
+                    public void onSuccess(IMqttToken asyncActionToken) {
+                        // We are connected
+                        Toast.makeText(SinkView.this, "connected!! :)", Toast.LENGTH_LONG).show();
+                        System.out.println("connected!! :)");
+                        status.setText(new String("Connected"));
+                        connected = true;
+                    }
+
+                    @Override
+                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                        // Something went wrong e.g. connection timeout or firewall problems
+                        Toast.makeText(SinkView.this, "not connected.. :(", Toast.LENGTH_LONG).show();
+                        System.out.println("not connected.. :(");
+                        status.setText(new String("Not connected"));
+                    }
+                });
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
+
+            client.setCallback(new MqttCallback() {
+                @Override
+                public void connectionLost(Throwable cause) {
+
+                }
+
+                @Override
+                public void messageArrived(String topic, MqttMessage message) throws Exception {
+                    System.out.println("Mesaj primit!! :)");
+                    response.setText(new String(message.getPayload()));
+                    status.setText(new String("Recieved"));
+                }
+
+                @Override
+                public void deliveryComplete(IMqttDeliveryToken token) {
+
+                }
+            });
+        }
+    }
+
+    public void disconn(View v) {
+
+        status = (TextView) findViewById(R.id.sinkview_status);
+
+        if (connected) {
+            try {
+                IMqttToken token = client.disconnect();
+//            IMqttToken token = client.connect(options);
+                token.setActionCallback(new IMqttActionListener() {
+                    @Override
+                    public void onSuccess(IMqttToken asyncActionToken) {
+                        // We are connected
+                        Toast.makeText(SinkView.this, "disconnected!! :)", Toast.LENGTH_LONG).show();
+                        System.out.println("disconnected!! :)");
+                        status.setText(new String("Disconnected"));
+                        connected = false;
+                    }
+
+                    @Override
+                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                        // Something went wrong e.g. connection timeout or firewall problems
+                        Toast.makeText(SinkView.this, "not disconnected.. :(", Toast.LENGTH_LONG).show();
+                        System.out.println("not disconnected.. :(");
+                        status.setText(new String("Not disconnected"));
+                    }
+                });
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void setSubscription() {
+
+        status = (TextView) findViewById(R.id.sinkview_status);
+
+        if (!subscribed && connected) {
+            try {
+                client.subscribe(topicResp, 0);
+                status.setText(new String("Subscribed"));
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void setUnsubscription() {
+
+        status = (TextView) findViewById(R.id.sinkview_status);
+
+        if (subscribed && connected) {
+            try {
+                client.unsubscribe(topicResp);
+                status.setText(new String("Unsubscribed"));
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

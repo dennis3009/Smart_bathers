@@ -1,0 +1,150 @@
+asyncapi: 2.2.0
+info:
+  title: SmartBath
+  version: 1.0.0
+  description: >
+    The Smart app that makes your bathroom even smarter.
+
+
+    ### Features:
+
+
+    * Light: control the light's color, the color mode (RGB/HSV) and brightness;
+
+    * Sink: control the sink's tap temperature and flow, monitor soap type and
+    soap availability;
+
+    * Shower: control the shower's water temperature, water pressure, duration,
+    shower gel quantity and shampoo quantity;
+
+    * Toilet: control the toilet's seat temperature, monitor if it's occupied
+    and turn on the night light;
+servers:
+  HiveMQ:
+    url: broker.hivemq.com:1883
+    protocol: MQTT
+    description: HiveMQ MQTT broker
+channels:
+  SmartBath.LightView.pub:
+    description: We send light data from the app.
+    parameters:
+      out:
+        $ref: '#/components/parameters/out'
+    publish:
+      summary: Inform about light status and settings.
+      operationId: sendLightData
+      message:
+        $ref: '#/components/messages/SmartBath.Light.out'
+  SmartBath.LightView.sub:
+    parameters:
+      in:
+        $ref: '#/components/parameters/in'
+    subscribe:
+      operationId: getLightResponse
+      message:
+        $ref: '#/components/messages/SmartBath.Light.in'
+  SmartBath.SinkView.pub:
+    description: We send light data from the app.
+    parameters:
+      out:
+        $ref: '#/components/parameters/out'
+    publish:
+      summary: Inform about light status and settings.
+      operationId: sendSinkData
+      message:
+        $ref: '#/components/messages/SmartBath.Sink.out'
+  SmartBath.SinkView.sub:
+    parameters:
+      in:
+        $ref: '#/components/parameters/in'
+    subscribe:
+      operationId: getSinkResponse
+      message:
+        $ref: '#/components/messages/SmartBath.Sink.in'
+  SmartBath.ShowerView.pub:
+    description: We send light data from the app.
+    parameters:
+      out:
+        $ref: '#/components/parameters/out'
+    publish:
+      summary: Inform about light status and settings.
+      operationId: sendShowerData
+      message:
+        $ref: '#/components/messages/SmartBath.Shower.out'
+  SmartBath.ShowerView.sub:
+    parameters:
+      in:
+        $ref: '#/components/parameters/in'
+    subscribe:
+      operationId: getShowerResponse
+      message:
+        $ref: '#/components/messages/SmartBath.Shower.in'
+  SmartBath.ToiletView.pub:
+    description: We send light data from the app.
+    parameters:
+      out:
+        $ref: '#/components/parameters/out'
+    publish:
+      summary: Inform about light status and settings.
+      operationId: sendToiletData
+      message:
+        $ref: '#/components/messages/SmartBath.Toilet.out'
+  SmartBath.ToiletView.sub:
+    parameters:
+      in:
+        $ref: '#/components/parameters/in'
+    subscribe:
+      operationId: getToiletResponse
+      message:
+        $ref: '#/components/messages/SmartBath.Toilet.in'
+components:
+  messages:
+    SmartBath.Light.in:
+      name: confirmLightDataRecieved
+      title: confirm Light Data Recieved
+      summary: Inform if we got light's data from the app.
+      contentType: string
+    SmartBath.Light.out:
+      name: sendLightData
+      title: send Light Data
+      summary: Send the light's data from the app.
+      contentType: string
+    SmartBath.Sink.in:
+      name: confirmSinkDataRecieved
+      title: confirm Sink Data Recieved
+      summary: Inform if we got sink's data from the app.
+      contentType: string
+    SmartBath.Sink.out:
+      name: sendSinkData
+      title: send Sink Data
+      summary: Send the sink's data from the app.
+      contentType: string
+    SmartBath.Shower.in:
+      name: confirmShowerDataRecieved
+      title: confirm Shower Data Recieved
+      summary: Inform if we got shower's data from the app.
+      contentType: string
+    SmartBath.Shower.out:
+      name: sendShowerData
+      title: send Shower Data
+      summary: Send the shower's data from the app.
+      contentType: string
+    SmartBath.Toilet.in:
+      name: confirmToiletDataRecieved
+      title: confirm Toilet Data Recieved
+      summary: Inform if we got toilet's data from the app.
+      contentType: string
+    SmartBath.Toilet.out:
+      name: sendToiletData
+      title: send Toilet Data
+      summary: Send toilet's data from the app.
+      contentType: string
+  parameters:
+    out:
+      description: String containing data.
+      schema:
+        type: string
+    in:
+      description: String confirming data was recieved.
+      schema:
+        type: string

@@ -10,10 +10,21 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.SmartBath.model.DatabaseHandler;
+
+import org.eclipse.paho.android.service.MqttAndroidClient;
+import org.eclipse.paho.client.mqttv3.IMqttActionListener;
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -135,7 +146,28 @@ public class ToiletView extends AppCompatActivity {
     private EditText toiletview_isOccupied;
     private EditText toiletview_isNightLightOn;
     private Button toiletview_submit;
+    private Button toiletview_publish;
+    private Button toiletview_connect;
+    private Button toiletview_disconnect;
+    private Button toiletview_subscribe;
+    private Button toiletview_unsubscribe;
+    private TextView status;
+    private TextView response;
+
     public SharedPreferences sp;
+
+    // tcp://broker.hivemq.com:1883
+    static String MQTTHOST = "tcp://broker.hivemq.com:1883";
+    static String USERNAME = "tester";
+    static String PASSWORD = "Abc12345";
+    String topicStr = "SmartBath/Toilet/out/";
+    String topicResp = "SmartBath/Toilet/in/";
+    String messageToSend = "Default";
+
+    boolean connected = false;
+    boolean subscribed = false;
+
+    MqttAndroidClient client;
 
     public static boolean isValidName(final String name) {
         Pattern pattern;
@@ -172,21 +204,72 @@ public class ToiletView extends AppCompatActivity {
         toiletview_isOccupied = (EditText) findViewById(R.id.toiletview_isOccupied);
         toiletview_isNightLightOn = (EditText) findViewById(R.id.toiletview_isNightLightOn);
         toiletview_submit = (Button) findViewById(R.id.button);
+        toiletview_publish = (Button) findViewById(R.id.toiletview_publish);
+        toiletview_connect = (Button) findViewById(R.id.toiletview_connect);
+        toiletview_disconnect = (Button) findViewById(R.id.toiletview_disconnect);
+        toiletview_subscribe = (Button) findViewById(R.id.toiletview_subscribe);
+        toiletview_unsubscribe = (Button) findViewById(R.id.toiletview_unsubscribe);
 
 //        String hello = "Hello, " + sp.getString("username","You are not logged in");
 //        toiletview_username.setText(hello);
         String role = sp.getString("role","");
 
+        if(role.equals("Guest")) {
+            toiletview_submit.setVisibility(View.INVISIBLE);
+        }
+        else {
+            toiletview_submit.setVisibility(View.VISIBLE);
+        }
 
-//        Cursor cursorLight = databaseHandler.searchUserInLights(sp.getString("username",""));
-//        while (cursorLight.moveToNext()) {
-//            lightview_name.setText(cursorLight.getString(1));
-//            lightview_mode.setText(cursorLight.getString(2));
-//            lightview_brightness.setText(cursorLight.getString(3));
-//            toiletview_weight.setText(cursorLight.getString(4));
-//            toiletview_isOccupied.setText(cursorLight.getString(5));
-//            toiletview_isNightLightOn.setText(cursorLight.getString(6));
-//        }
+        toiletview_publish.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //String username = cursorLight.getString(7);
+                String name = toiletview_name.getText().toString();
+                String isOccupied = toiletview_isOccupied.getText().toString();
+                String isNightLightOn = toiletview_isNightLightOn.getText().toString();
+
+                boolean goodName = false;
+                boolean goodOccupied = false;
+                boolean goodNightLight = false;
+
+                if ( !isValidName(name) ) {
+                    toiletview_name.setError("The name must have at least 5 characters! The first one should be uppercase!");
+                }
+                else {
+                    goodName = true;
+                }
+
+                if ( !isValidOccupied(isOccupied) ) {
+                    toiletview_isOccupied.setError("Yes/No only");
+                }
+                else {
+                    goodOccupied = true;
+                }
+
+                if ( !isValidNightLight(isNightLightOn) ) {
+                    toiletview_isNightLightOn.setError("Yes/No only");
+                }
+                else {
+                    goodNightLight = true;
+                }
+
+                if (role.equals("User")) {
+
+                }
+                else if (role.equals("Admin")) {
+
+                }
+
+                if( goodName && goodOccupied && goodNightLight) {
+                    messageToSend = "name=" + name + ";";
+                    messageToSend += "isOccupied=" + isOccupied + ";";
+                    messageToSend += "isNightLightOn=" + isNightLightOn + ";";
+
+                    pub(v);
+                }
+            }
+        });
 
         toiletview_submit.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -266,6 +349,34 @@ public class ToiletView extends AppCompatActivity {
                 }
             }
         });
+
+        toiletview_connect.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                conn(v);
+            }
+        });
+
+        toiletview_disconnect.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                disconn(v);
+            }
+        });
+
+        toiletview_subscribe.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setSubscription();
+            }
+        });
+
+        toiletview_unsubscribe.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setUnsubscription();
+            }
+        });
     }
 
     @Override
@@ -330,5 +441,139 @@ public class ToiletView extends AppCompatActivity {
         NAT.execute().get();
         String info = NAT.getInfo();
         return info;
+    }
+
+    public void pub(View v) {
+
+        status = (TextView) findViewById(R.id.toiletview_status);
+
+        if(connected) {
+            String topic = topicStr;
+            String message = messageToSend;
+            try {
+                client.publish(topic, message.getBytes(), 0, false);
+                status.setText(new String("Sent"));
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void conn(View v) {
+        String clientId = MqttClient.generateClientId();
+        client = new MqttAndroidClient(this.getApplicationContext(), MQTTHOST,
+                clientId);
+
+        MqttConnectOptions options = new MqttConnectOptions();
+//        options.setUserName(USERNAME);
+//        options.setPassword(PASSWORD.toCharArray());
+
+        response = (TextView) findViewById(R.id.toiletview_response);
+        status = (TextView) findViewById(R.id.toiletview_status);
+
+        if (!connected) {
+            try {
+                IMqttToken token = client.connect();
+//            IMqttToken token = client.connect(options);
+                token.setActionCallback(new IMqttActionListener() {
+                    @Override
+                    public void onSuccess(IMqttToken asyncActionToken) {
+                        // We are connected
+                        Toast.makeText(ToiletView.this, "connected!! :)", Toast.LENGTH_LONG).show();
+                        System.out.println("connected!! :)");
+                        status.setText(new String("Connected"));
+                        connected = true;
+                    }
+
+                    @Override
+                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                        // Something went wrong e.g. connection timeout or firewall problems
+                        Toast.makeText(ToiletView.this, "not connected.. :(", Toast.LENGTH_LONG).show();
+                        System.out.println("not connected.. :(");
+                        status.setText(new String("Not connected"));
+                    }
+                });
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
+
+            client.setCallback(new MqttCallback() {
+                @Override
+                public void connectionLost(Throwable cause) {
+
+                }
+
+                @Override
+                public void messageArrived(String topic, MqttMessage message) throws Exception {
+                    System.out.println("Mesaj primit!! :)");
+                    response.setText(new String(message.getPayload()));
+                    status.setText(new String("Recieved"));
+                }
+
+                @Override
+                public void deliveryComplete(IMqttDeliveryToken token) {
+
+                }
+            });
+        }
+    }
+
+    public void disconn(View v) {
+
+        status = (TextView) findViewById(R.id.toiletview_status);
+
+        if (connected) {
+            try {
+                IMqttToken token = client.disconnect();
+//            IMqttToken token = client.connect(options);
+                token.setActionCallback(new IMqttActionListener() {
+                    @Override
+                    public void onSuccess(IMqttToken asyncActionToken) {
+                        // We are connected
+                        Toast.makeText(ToiletView.this, "disconnected!! :)", Toast.LENGTH_LONG).show();
+                        System.out.println("disconnected!! :)");
+                        status.setText(new String("Disconnected"));
+                        connected = false;
+                    }
+
+                    @Override
+                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                        // Something went wrong e.g. connection timeout or firewall problems
+                        Toast.makeText(ToiletView.this, "not disconnected.. :(", Toast.LENGTH_LONG).show();
+                        System.out.println("not disconnected.. :(");
+                        status.setText(new String("Not disconnected"));
+                    }
+                });
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void setSubscription() {
+
+        status = (TextView) findViewById(R.id.toiletview_status);
+
+        if (!subscribed && connected) {
+            try {
+                client.subscribe(topicResp, 0);
+                status.setText(new String("Subscribed"));
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void setUnsubscription() {
+
+        status = (TextView) findViewById(R.id.toiletview_status);
+        if (subscribed && connected) {
+            try {
+                client.unsubscribe(topicResp);
+                status.setText(new String("Unsubscribed"));
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

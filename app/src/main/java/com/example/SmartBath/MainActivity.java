@@ -94,6 +94,8 @@ public class MainActivity extends AppCompatActivity {
         if (sp.getBoolean("logged", false) == false) {
             mylight_button.setVisibility(View.INVISIBLE);
             myshower_button.setVisibility(View.INVISIBLE);
+            mysink_button.setVisibility(View.INVISIBLE);
+            mytoilet_button.setVisibility(View.INVISIBLE);
         } else {
             mylight_button.setVisibility(View.VISIBLE);
             mylight_button.setOnClickListener(new View.OnClickListener() {
