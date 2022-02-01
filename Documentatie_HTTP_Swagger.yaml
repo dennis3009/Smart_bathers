@@ -2,10 +2,10 @@ swagger: "2.0"
 info:
   description: "This is a sample server Lightstore server.  You can find out more about     Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net, #swagger](http://swagger.io/irc/).      For this sample, you can use the api key `special-key` to test the authorization     filters."
   version: "1.0.0"
-  title: "Swagger Lightstore"
+  title: "Smart bathroom"
   termsOfService: "http://swagger.io/terms/"
   contact:
-    email: "apiteam@swagger.io"
+    email: "smart_bathroom_support@gmail.com"
   license:
     name: "Apache 2.0"
     url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -16,13 +16,13 @@ tags:
   description: "Everything about your Lights"
   
 - name: "sink"
-  description: "Access to Lightstore ordersd"
+  description: "Everything about your Sink"
   
 - name: "shower"
-  description: "Access to Lightstore orders"
+  description: "Everything about your Shower"
   
 - name: "toilet"
-  description: "Access to Lightstore ordersdd"
+  description: "Everything about your Toilet"
 schemes:
 - "https"
 - "http"
